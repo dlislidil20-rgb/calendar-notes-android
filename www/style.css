@@ -12,3 +12,5 @@ body{font-family:GangwonEducationModuche,sans-serif;font-weight:300}textarea{fon
 .editor-panel>*{flex-shrink:0}.editor-panel textarea{flex:1 1 auto;height:auto;min-height:60px;resize:none}
 #toolbar button{white-space:nowrap;flex-shrink:0}
 @media(max-height:450px){.editor-panel{height:100%;gap:5px;padding:8px 12px}.edit-info{display:none}.actions button{padding:8px 12px}.edit-tools button{padding:5px 8px}}
+/* Navigation symbols are not included in the Korean font's character set. */
+#prev,#next,#edit-prev,#edit-next,#close{font-family:system-ui,sans-serif}
