@@ -66,11 +66,11 @@ jobs:
             echo 'Unexpected Internet permission'; exit 1
           fi
           mkdir -p dist
-          cp "$APK" dist/calendar-notes-v4.4.apk
-          sha256sum dist/calendar-notes-v4.4.apk > dist/SHA256SUMS.txt
+          cp "$APK" dist/calendar-notes-v4.5.apk
+          sha256sum dist/calendar-notes-v4.5.apk > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: calendar-notes-v4.4-apk
+          name: calendar-notes-v4.5-apk
           path: dist/
           if-no-files-found: error
           retention-days: 90

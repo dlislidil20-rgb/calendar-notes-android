@@ -25,7 +25,7 @@ test('multiline edits autosave, navigation saves, delete only selected day',()=>
  a.d.querySelector('#edit-prev').click();assert.match(a.d.querySelector('#note').value,/국\n\n18:00/);
  a.d.querySelector('#delete').click();assert.equal(Object.keys(stored(a)).length,1);assert.equal(stored(a)[first],undefined);a.close();
 });
-test('food counts, grades, gray zero, pastel saturation at eight and same dark palette',()=>{
+test('food counts, white Excellent/Good, unchanged five-plus pastel colors and same dark palette',()=>{
  const a=app();edit(a);const colors=[];
  for(let n=0;n<=9;n++){
  type(a,'11:40\n[가게]\n\n'+Array.from({length:n},(_,i)=>'음식'+i).join('\n'));
@@ -33,7 +33,8 @@ test('food counts, grades, gray zero, pastel saturation at eight and same dark p
  assert.equal(card.querySelector('.grade').textContent,n<=2?'Excellent':n<=4?'Good':n<=6?'Hmm...':'Bad');
  colors.push(card.style.background);edit(a);
  }
- assert.equal(colors[0],'rgb(240, 241, 243)');assert.equal(new Set(colors.slice(0,9)).size,9);assert.equal(colors[8],colors[9]);
+ assert.ok(colors.slice(0,5).every(c=>c==='rgb(255, 255, 255)'));assert.equal(new Set(colors.slice(0,9)).size,5);
+ for(let n=5;n<=8;n++){const expected=a.d.createElement('div');expected.style.background=`hsl(${44-40*n/8} 77% ${96-13*n/8}%)`;assert.equal(colors[n],expected.style.background);}assert.equal(colors[8],colors[9]);
  a.d.querySelector('#save').click();a.d.querySelector('[data-tab="settings"]').click();
  a.d.querySelector('#theme').value='dark';a.d.querySelector('#theme').dispatchEvent(new a.w.Event('change'));
  edit(a);a.d.querySelector('#close').click();assert.equal(a.d.querySelector('.entry').style.background,colors[9]);a.close();
@@ -70,7 +71,7 @@ test('Android injected bridge starts without registerPlugin and native time + ba
 });
 
 test('empty dates have no hint or grade, month uses year first, shop opens reusable list',()=>{
- const a=app();assert.equal(a.d.querySelectorAll('.entry .grade,.entry .hint').length,0);
+ const a=app();assert.equal(a.d.querySelectorAll('.entry .grade,.entry .hint').length,0);assert.equal(a.d.querySelector('.entry').style.background,'rgb(240, 241, 243)');
  assert.match(a.d.querySelector('.month-divider').textContent,/^\d{4}년 \d{1,2}월$/);
  const t=edit(a);a.d.querySelector('#insert-shop').click();assert.equal(t.value,'');assert.equal(a.d.querySelector('#catalog-dialog').classList.contains('hidden'),false);a.d.querySelector('#catalog-close').click();
  type(a,'   \n');a.d.querySelector('#save').click();assert.equal(a.d.querySelectorAll('.grade').length,0);a.close();
@@ -115,8 +116,8 @@ test('saved shops and menus insert on separate lines, survive restart, and prese
  a.d.querySelector('#insert-menu').click();addName(a,'치즈피자');addName(a,'사과');chooseName(a,'치즈피자');chooseName(a,'사과');
  assert.equal(t.value,'11:40\n[코스트코]\n치즈피자\n사과\n');
  a.d.querySelector('#catalog-close').click();a.d.querySelector('#save').click();assert.equal(a.d.querySelector('.grade').textContent,'Excellent');
- const saved=JSON.parse(a.w.localStorage.getItem('calendar-catalog-v1'));a.close();
- const b=app({},null,saved);edit(b);b.d.querySelector('#insert-menu').click();assert.equal(b.d.querySelectorAll('.catalog-choose').length,2);b.close();
+ const saved=JSON.parse(a.w.localStorage.getItem('calendar-catalog-v1'));assert.deepEqual(saved.menus,['사과','치즈피자']);a.close();
+ const b=app({},null,saved);edit(b);b.d.querySelector('#insert-menu').click();assert.equal(b.d.querySelectorAll('.catalog-choose').length,2);assert.equal(b.d.querySelector('.catalog-choose').textContent,'사과');chooseName(b,'치즈피자');assert.equal(b.d.querySelector('.catalog-choose').textContent,'사과');b.d.querySelector('#catalog-close').click();b.d.querySelector('#insert-menu').click();assert.equal(b.d.querySelector('.catalog-choose').textContent,'치즈피자');b.close();
 });
 test('history seeds lists once; editing/deleting saved names never changes prior notes',()=>{
  const records={'2026-10-05':'11:40\n[정군족발]\n보쌈\n\n18:00\n사과'};
