@@ -54,9 +54,13 @@ public class JournalUiTest {
     }
     private void screenshot(String name) throws Exception {
         Instrumentation inst=InstrumentationRegistry.getInstrumentation();
-        File dir=new File(inst.getTargetContext().getExternalFilesDir(null),"screenshots");dir.mkdirs();
-        Bitmap bitmap=inst.getUiAutomation().takeScreenshot();
-        try(FileOutputStream out=new FileOutputStream(new File(dir,name+".png"))){bitmap.compress(Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();
+        // Gradle uninstalls the tested app after the suite; shared Downloads survives cleanup.
+        for (String command : new String[]{"mkdir -p /sdcard/Download/calendar-ui", "screencap -p /sdcard/Download/calendar-ui/"+name+".png"}) {
+            try (android.os.ParcelFileDescriptor fd=inst.getUiAutomation().executeShellCommand(command);
+                 java.io.FileInputStream input=new java.io.FileInputStream(fd.getFileDescriptor())) {
+                byte[] buffer=new byte[1024];while(input.read(buffer)!=-1) { }
+            }
+        }
     }
     @Test
     public void android16LaunchEditSaveSettingsAndTimePicker() throws Exception {
