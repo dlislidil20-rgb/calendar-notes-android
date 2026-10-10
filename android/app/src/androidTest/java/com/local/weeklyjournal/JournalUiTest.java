@@ -63,6 +63,21 @@ public class JournalUiTest {
         }
         inst.waitForIdleSync();SystemClock.sleep(500);
     }
+    private int spinnerCount(android.view.View view) {
+        int count = view instanceof android.widget.NumberPicker ? 1 : 0;
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group = (android.view.ViewGroup)view;
+            for (int i=0; i<group.getChildCount(); i++) count += spinnerCount(group.getChildAt(i));
+        }
+        return count;
+    }
+    private void setPickerTime(int hour, int minute) {
+        onView(isAssignableFrom(TimePicker.class)).check((view,error)->{
+            if(error!=null)throw error;
+            assertTrue("AM/PM, hour and minute must be scrolling wheels",spinnerCount(view)>=3);
+            TimePicker picker=(TimePicker)view;assertFalse(picker.is24HourView());picker.setHour(hour);picker.setMinute(minute);
+        });
+    }
     private void screenshot(String name) throws Exception {
         Instrumentation inst=InstrumentationRegistry.getInstrumentation();
         // Gradle uninstalls the tested app after the suite; shared Downloads survives cleanup.
@@ -111,7 +126,13 @@ public class JournalUiTest {
             assertEquals("true",js(scenario,"document.querySelector('#note').value.includes('닭가슴살')"));
             tap(scenario,"#insert-time");
             onView(isAssignableFrom(TimePicker.class)).check(matches(isDisplayed()));
-            screenshot("03-native-time-picker");pressBack();
+            setPickerTime(17,49);screenshot("03-native-time-picker");pressBack();
+            tap(scenario,"#insert-time");setPickerTime(23,59);
+            onView(androidx.test.espresso.matcher.ViewMatchers.withText("추가")).perform(androidx.test.espresso.action.ViewActions.click());
+            assertEquals("true",js(scenario,"document.querySelector('#note').value.endsWith('\\n\\n23:59\\n')"));
+            tap(scenario,"#insert-time");setPickerTime(0,0);
+            onView(androidx.test.espresso.matcher.ViewMatchers.withText("추가")).perform(androidx.test.espresso.action.ViewActions.click());
+            assertEquals("true",js(scenario,"document.querySelector('#note').value.endsWith('\\n\\n00:00\\n')"));
             tap(scenario,"#close");tap(scenario,"[data-tab=settings]");
             js(scenario,"document.querySelector('#theme').value='dark';document.querySelector('#theme').dispatchEvent(new Event('change'))");
             assertEquals("\"dark\"",js(scenario,"document.body.dataset.theme"));
@@ -140,10 +161,27 @@ public class JournalUiTest {
             js(scenario,"window.testScrollBefore=document.querySelector('#content').scrollTop");
             tap(scenario,".entry.today");tap(scenario,"#close");
             assertEquals("true",js(scenario,"Math.abs(document.querySelector('#content').scrollTop-window.testScrollBefore)<3"));
+            tap(scenario,".entry.today");
+            js(scenario,"document.querySelector('#note').setSelectionRange(document.querySelector('#note').value.length,document.querySelector('#note').value.length)");
+            tap(scenario,"#insert-shop");
+            js(scenario,"document.querySelector('#catalog-input').value='정군족발'");tap(scenario,"#catalog-save");
+            screenshot("09-saved-shops");tap(scenario,".catalog-choose");
+            assertEquals("true",js(scenario,"document.querySelector('#note').value.includes('[정군족발]')"));
+            tap(scenario,"#insert-menu");
+            js(scenario,"document.querySelector('#catalog-input').value='보쌈'");tap(scenario,"#catalog-save");
+            tap(scenario,".catalog-choose");
+            js(scenario,"document.querySelector('#catalog-input').value='비빔국수'");tap(scenario,"#catalog-save");
+            tap(scenario,".catalog-row:last-child .catalog-choose");screenshot("10-saved-menus");
+            tap(scenario,"#catalog-close");tap(scenario,"#save");
+            assertEquals("true",js(scenario,"document.querySelector('.today pre').textContent.includes('[정군족발]\\n보쌈\\n비빔국수')"));
             // Recreate the actual Android Activity, ensuring saved records and theme survive.
             scenario.recreate();ready(scenario);
             assertEquals("\"dark\"",js(scenario,"document.body.dataset.theme"));
             assertEquals("true",js(scenario,"document.querySelector('.entry pre').textContent.includes('닭가슴살')"));
+            tap(scenario,".entry.today");tap(scenario,"#insert-shop");
+            assertEquals("true",js(scenario,"document.querySelector('#catalog-list').textContent.includes('정군족발')"));
+            tap(scenario,"#catalog-close");tap(scenario,"#insert-menu");
+            assertEquals("true",js(scenario,"document.querySelector('#catalog-list').textContent.includes('비빔국수')"));
         }
     }
 }

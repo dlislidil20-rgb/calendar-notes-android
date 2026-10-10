@@ -1,7 +1,10 @@
 package com.local.weeklyjournal;
 
 import android.app.Activity;
-import android.app.TimePickerDialog;
+import android.app.AlertDialog;
+import android.view.ContextThemeWrapper;
+import android.view.LayoutInflater;
+import android.widget.TimePicker;
 import android.content.Intent;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
@@ -49,11 +52,24 @@ public class JournalPlugin extends Plugin {
     public void pickTime(PluginCall call) {
         getActivity().runOnUiThread(() -> {
             Calendar now = Calendar.getInstance();
-            TimePickerDialog dialog = new TimePickerDialog(getActivity(), (view, hour, minute) -> {
-                JSObject response = new JSObject();
-                response.put("time", String.format(Locale.ROOT, "%02d:%02d", hour, minute));
-                call.resolve(response);
-            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), true);
+            boolean dark = Boolean.TRUE.equals(call.getBoolean("dark", false));
+            ContextThemeWrapper context = new ContextThemeWrapper(getActivity(),
+                dark ? android.R.style.Theme_Material_Dialog_Alert : android.R.style.Theme_Material_Light_Dialog_Alert);
+            TimePicker picker = (TimePicker) LayoutInflater.from(context).inflate(R.layout.journal_time_picker, null);
+            picker.setIs24HourView(false);
+            picker.setHour(now.get(Calendar.HOUR_OF_DAY));
+            picker.setMinute(now.get(Calendar.MINUTE));
+            AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle("시간 선택")
+                .setView(picker)
+                .setNegativeButton("취소", (d, which) -> call.resolve(new JSObject()))
+                .setPositiveButton("추가", (d, which) -> {
+                    picker.clearFocus();
+                    JSObject response = new JSObject();
+                    // The wheel uses AM/PM, while notes retain the unambiguous 24-hour format.
+                    response.put("time", String.format(Locale.ROOT, "%02d:%02d", picker.getHour(), picker.getMinute()));
+                    call.resolve(response);
+                }).create();
             dialog.setOnCancelListener(d -> call.resolve(new JSObject()));
             dialog.show();
         });
