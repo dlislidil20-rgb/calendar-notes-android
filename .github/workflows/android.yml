@@ -1,0 +1,47 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm test
+      - run: npx cap sync android
+      - name: Build and lint Android APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug lintDebug --stacktrace
+      - name: Verify installable signed APK
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK"
+          if "$ANDROID_HOME/build-tools/35.0.0/aapt" dump permissions "$APK" | grep -q android.permission.INTERNET; then
+            echo 'Unexpected Internet permission'; exit 1
+          fi
+          mkdir -p dist
+          cp "$APK" dist/calendar-notes-v4.apk
+          sha256sum dist/calendar-notes-v4.apk > dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calendar-notes-v4-apk
+          path: dist/
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,11 @@
+{
+  "appId": "com.local.weeklyjournal",
+  "appName": "달력기록",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "adjustMarginsForEdgeToEdge": "force"
+  }
+}

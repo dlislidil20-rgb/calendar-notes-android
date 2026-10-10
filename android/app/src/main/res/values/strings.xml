@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">달력기록</string>
+    <string name="title_activity_main">달력기록</string>
+    <string name="package_name">com.local.weeklyjournal</string>
+    <string name="custom_url_scheme">com.local.weeklyjournal</string>
+</resources>
