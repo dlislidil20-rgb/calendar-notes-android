@@ -46,6 +46,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: |
+            adb shell settings put secure show_ime_with_hard_keyboard 1
             cd android && ./gradlew :app:connectedDebugAndroidTest --stacktrace
             adb pull /sdcard/Download/calendar-ui ui-screenshots
       - name: Upload Android UI test results
@@ -65,11 +66,11 @@ jobs:
             echo 'Unexpected Internet permission'; exit 1
           fi
           mkdir -p dist
-          cp "$APK" dist/calendar-notes-v4.1.apk
-          sha256sum dist/calendar-notes-v4.1.apk > dist/SHA256SUMS.txt
+          cp "$APK" dist/calendar-notes-v4.2.apk
+          sha256sum dist/calendar-notes-v4.2.apk > dist/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: calendar-notes-v4.1-apk
+          name: calendar-notes-v4.2-apk
           path: dist/
           if-no-files-found: error
           retention-days: 90

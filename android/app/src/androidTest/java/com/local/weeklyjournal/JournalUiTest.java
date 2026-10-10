@@ -72,6 +72,26 @@ public class JournalUiTest {
             assertEquals("false",js(scenario,"document.querySelector('#editor').classList.contains('hidden')"));
             String note="11:50\n[코스트코]\n치즈피자 1조각\n밥 150\n참치김치찌개\n19:10\n닭가슴살\n사과";
             js(scenario,"document.querySelector('#note').value="+JSONObject.quote(note)+";document.querySelector('#note').dispatchEvent(new Event('input'))");
+            tap(scenario,"#note");
+            java.util.concurrent.atomic.AtomicBoolean keyboard = new java.util.concurrent.atomic.AtomicBoolean();
+            for (int i=0; i<40 && !keyboard.get(); i++) {
+                scenario.onActivity(a -> {
+                    androidx.core.view.WindowInsetsCompat insets = androidx.core.view.ViewCompat.getRootWindowInsets(a.getBridge().getWebView());
+                    keyboard.set(insets != null && insets.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()));
+                });
+                SystemClock.sleep(250);
+            }
+            assertTrue("Soft keyboard must actually be visible", keyboard.get());
+            SystemClock.sleep(500);
+            assertEquals("true",js(scenario,"(()=>{const t=document.querySelector('#note').getBoundingClientRect(),s=document.querySelector('#save').getBoundingClientRect();return t.height>=60 && t.bottom<=s.top && s.bottom<=innerHeight})()"));
+            scenario.onActivity(a -> {
+                android.view.View web = a.getBridge().getWebView();
+                int[] location = new int[2];web.getLocationOnScreen(location);
+                androidx.core.view.WindowInsetsCompat insets = androidx.core.view.ViewCompat.getRootWindowInsets(web);
+                int keyboardTop = a.getWindow().getDecorView().getHeight() - insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime()).bottom;
+                assertTrue("WebView must end above keyboard", location[1]+web.getHeight()<=keyboardTop+2);
+            });
+            screenshot("06-editor-keyboard");
             tap(scenario,"#save");
             assertEquals("\"Hmm...\"",js(scenario,"document.querySelector('.entry .grade').textContent"));
             assertEquals("true",js(scenario,"document.querySelector('.entry pre').textContent.includes('찌개\\n\\n19:10')"));

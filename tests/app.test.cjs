@@ -65,3 +65,10 @@ test('Android injected bridge starts without registerPlugin and native time + ba
  await [...a.d.querySelectorAll('.settings button')].find(b=>b.textContent.includes('내보내기')).onclick();
  assert.match(Object.values(JSON.parse(exported.data).records)[0],/닭가슴살\n사과/);a.close();
 });
+
+test('empty dates have no hint or grade, month uses year first, shop cursor is inside brackets',()=>{
+ const a=app();assert.equal(a.d.querySelectorAll('.entry .grade,.entry .hint').length,0);
+ assert.match(a.d.querySelector('.month-divider').textContent,/^\d{4}년 \d{1,2}월$/);
+ const t=edit(a);a.d.querySelector('#insert-shop').click();assert.equal(t.value,'[]\n');assert.equal(t.selectionStart,1);
+ type(a,'   \n');a.d.querySelector('#save').click();assert.equal(a.d.querySelectorAll('.grade').length,0);a.close();
+});

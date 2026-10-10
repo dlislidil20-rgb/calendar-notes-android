@@ -4,3 +4,11 @@
 textarea{text-align:var(--note-align,center)}.editor-panel{max-height:95dvh} .entry h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.entry .grade{float:none;flex-shrink:0}
 
 .entry pre{white-space:pre;overflow-wrap:normal;overflow-x:auto}textarea{white-space:pre;overflow-wrap:normal;overflow-x:auto}
+
+@font-face{font-family:GangwonEducationModuche;src:url('fonts/GangwonEdu_OTFLightA.woff') format('woff');font-weight:300;font-display:swap}
+@font-face{font-family:GangwonEducationModuche;src:url('fonts/GangwonEdu_OTFBoldA.woff') format('woff');font-weight:700;font-display:swap}
+body{font-family:GangwonEducationModuche,sans-serif;font-weight:300}textarea{font-family:inherit;font-weight:300}
+.editor-panel{height:min(650px,95dvh);max-height:100%;min-height:0;overflow:auto;gap:8px;padding:12px 14px}
+.editor-panel>*{flex-shrink:0}.editor-panel textarea{flex:1 1 auto;height:auto;min-height:60px;resize:none}
+#toolbar button{white-space:nowrap;flex-shrink:0}
+@media(max-height:450px){.editor-panel{height:100%;gap:5px;padding:8px 12px}.edit-info{display:none}.actions button{padding:8px 12px}.edit-tools button{padding:5px 8px}}
