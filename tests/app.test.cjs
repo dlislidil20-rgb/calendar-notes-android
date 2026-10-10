@@ -25,12 +25,12 @@ test('multiline edits autosave, navigation saves, delete only selected day',()=>
  a.d.querySelector('#edit-prev').click();assert.match(a.d.querySelector('#note').value,/국\n\n18:00/);
  a.d.querySelector('#delete').click();assert.equal(Object.keys(stored(a)).length,1);assert.equal(stored(a)[first],undefined);a.close();
 });
-test('food counts, white Excellent/Good, unchanged five-plus pastel colors and same dark palette',()=>{
+test('food counts, white 우수/양호, unchanged five-plus pastel colors and same dark palette',()=>{
  const a=app();edit(a);const colors=[];
  for(let n=0;n<=9;n++){
  type(a,'11:40\n[가게]\n\n'+Array.from({length:n},(_,i)=>'음식'+i).join('\n'));
  a.d.querySelector('#save').click();const card=a.d.querySelector('.entry');
- assert.equal(card.querySelector('.grade').textContent,n<=2?'Excellent':n<=4?'Good':n<=6?'Hmm...':'Bad');
+ assert.equal(card.querySelector('.grade').textContent,n<=2?'우수':n<=4?'양호':n<=6?'미흡':'위험');
  colors.push(card.style.background);edit(a);
  }
  assert.ok(colors.slice(0,5).every(c=>c==='rgb(255, 255, 255)'));assert.equal(new Set(colors.slice(0,9)).size,5);
@@ -64,7 +64,7 @@ test('Android injected bridge starts without registerPlugin and native time + ba
  assert.match(a.d.querySelector('#note').value,/찌개\n\n19:10\n$/);
  type(a,a.d.querySelector('#note').value+'닭가슴살\n사과');
  a.d.querySelector('#save').click();
- assert.equal(a.d.querySelector('.entry .grade').textContent,'Hmm...');
+ assert.equal(a.d.querySelector('.entry .grade').textContent,'미흡');
  a.d.querySelector('[data-tab="settings"]').click();
  await [...a.d.querySelectorAll('.settings button')].find(b=>b.textContent.includes('내보내기')).onclick();
  assert.match(Object.values(JSON.parse(exported.data).records)[0],/닭가슴살\n사과/);a.close();
@@ -115,7 +115,7 @@ test('saved shops and menus insert on separate lines, survive restart, and prese
  assert.equal(t.value,'11:40\n[코스트코]\n');
  a.d.querySelector('#insert-menu').click();addName(a,'치즈피자');addName(a,'사과');chooseName(a,'치즈피자');chooseName(a,'사과');
  assert.equal(t.value,'11:40\n[코스트코]\n치즈피자\n사과\n');
- a.d.querySelector('#catalog-close').click();a.d.querySelector('#save').click();assert.equal(a.d.querySelector('.grade').textContent,'Excellent');
+ a.d.querySelector('#catalog-close').click();a.d.querySelector('#save').click();assert.equal(a.d.querySelector('.grade').textContent,'우수');
  const saved=JSON.parse(a.w.localStorage.getItem('calendar-catalog-v1'));assert.deepEqual(saved.menus,['사과','치즈피자']);a.close();
  const b=app({},null,saved);edit(b);b.d.querySelector('#insert-menu').click();assert.equal(b.d.querySelectorAll('.catalog-choose').length,2);assert.equal(b.d.querySelector('.catalog-choose').textContent,'사과');chooseName(b,'치즈피자');assert.equal(b.d.querySelector('.catalog-choose').textContent,'사과');b.d.querySelector('#catalog-close').click();b.d.querySelector('#insert-menu').click();assert.equal(b.d.querySelector('.catalog-choose').textContent,'치즈피자');b.close();
 });

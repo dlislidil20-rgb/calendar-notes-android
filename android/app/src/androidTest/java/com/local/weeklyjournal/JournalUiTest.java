@@ -119,7 +119,7 @@ public class JournalUiTest {
             });
             screenshot("06-editor-keyboard");
             tap(scenario,"#save");
-            assertEquals("\"Hmm...\"",js(scenario,"document.querySelector('.entry .grade').textContent"));
+            assertEquals("\"미흡\"",js(scenario,"document.querySelector('.entry .grade').textContent"));
             assertEquals("true",js(scenario,"document.querySelector('.entry pre').textContent.includes('찌개\\n\\n19:10')"));
             screenshot("02-week-saved");
             tap(scenario,".entry.today");tap(scenario,"#edit-next");tap(scenario,"#edit-prev");
