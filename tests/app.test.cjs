@@ -2,11 +2,12 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {JSDOM}=require('jsdom');
-function app(records={}) {
+function app(records={}, nativePlugin=null) {
  const dom=new JSDOM(fs.readFileSync('www/index.html','utf8'),{url:'https://localhost',runScripts:'outside-only'});
  const w=dom.window;
  w.matchMedia=()=>({matches:false,addEventListener(){}});
  w.confirm=()=>true;w.alert=()=>{};
+ if(nativePlugin)w.Capacitor={isNativePlatform:()=>true,Plugins:{Journal:nativePlugin}};
  w.localStorage.setItem('calendar-notes-v1',JSON.stringify(records));
  w.eval(fs.readFileSync('www/app.js','utf8'));
  return {w,d:w.document,close:()=>w.close()};
@@ -46,4 +47,21 @@ test('JSON import restores records and rejects invalid format without data loss'
  Object.defineProperty(file,'files',{configurable:true,value:[{text:async()=>JSON.stringify({format:'calendar-notes-v1',records:{'2026-10-10':'[가게]\n밥'}})}]});
  await file.onchange();assert.equal(stored(a)['2026-10-10'],'[가게]\n밥');
  Object.defineProperty(file,'files',{value:[{text:async()=>'{}'}]});await file.onchange();assert.equal(stored(a)['2026-10-10'],'[가게]\n밥');a.close();
+});
+
+test('Android injected bridge starts without registerPlugin and native time + backup work',async()=>{
+ let exported;
+ const a=app({}, {pickTime:async()=>({time:'19:10'}),exportJson:async data=>{exported=data;return {cancelled:false}}});
+ assert.equal(a.d.querySelectorAll('.entry').length,7);
+ a.d.querySelector('.entry').click();
+ assert.equal(a.d.querySelector('#editor').classList.contains('hidden'),false);
+ type(a,'11:50\n[코스트코]\n치즈피자 1조각\n밥 150\n참치김치찌개');
+ await a.d.querySelector('#insert-time').onclick();
+ assert.match(a.d.querySelector('#note').value,/찌개\n\n19:10\n$/);
+ type(a,a.d.querySelector('#note').value+'닭가슴살\n사과');
+ a.d.querySelector('#save').click();
+ assert.equal(a.d.querySelector('.entry .grade').textContent,'Hmm...');
+ a.d.querySelector('[data-tab="settings"]').click();
+ await [...a.d.querySelectorAll('.settings button')].find(b=>b.textContent.includes('내보내기')).onclick();
+ assert.match(Object.values(JSON.parse(exported.data).records)[0],/닭가슴살\n사과/);a.close();
 });

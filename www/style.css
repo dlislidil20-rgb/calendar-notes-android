@@ -2,3 +2,5 @@
 .entry .grade{float:right;font-size:13px;font-weight:800;opacity:.75;margin-left:8px}.entry h3{overflow:auto}
 
 textarea{text-align:var(--note-align,center)}.editor-panel{max-height:95dvh} .entry h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.entry .grade{float:none;flex-shrink:0}
+
+.entry pre{white-space:pre;overflow-wrap:normal;overflow-x:auto}textarea{white-space:pre;overflow-wrap:normal;overflow-x:auto}

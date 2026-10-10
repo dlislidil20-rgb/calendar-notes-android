@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const native=window.Capacitor?.isNativePlatform()?window.Capacitor.registerPlugin('Journal'):null;
+const native=window.Capacitor?.Plugins?.Journal||null;
 const KEY='calendar-notes-v1',SETTINGS='calendar-settings-v2';let records={},settings={theme:'system',align:'center',font:15};try{const x=JSON.parse(localStorage.getItem(KEY)||'{}');if(x&&typeof x==='object'&&!Array.isArray(x))records=x}catch{}try{const s=JSON.parse(localStorage.getItem(SETTINGS)||'{}');if(s&&typeof s==='object')settings={...settings,...s}}catch{}
 let tab='week',cursor=new Date(),editKey=null;const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0'),key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,date=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)},add=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n),weekStart=d=>add(d,-d.getDay()),days=['일','월','화','수','목','금','토'];
 const lineCount=s=>foodCount(s);
