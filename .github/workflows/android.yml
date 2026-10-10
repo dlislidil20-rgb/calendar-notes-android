@@ -31,7 +31,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug assembleDebugAndroidTest lintDebug --stacktrace
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug --stacktrace
       - name: Enable Android emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -46,7 +46,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: |
-            cd android && ./gradlew connectedDebugAndroidTest --stacktrace
+            cd android && ./gradlew :app:connectedDebugAndroidTest --stacktrace
             adb pull /sdcard/Android/data/com.local.weeklyjournal/files/screenshots ui-screenshots
       - name: Upload Android UI test results
         if: always()
