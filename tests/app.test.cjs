@@ -6,9 +6,11 @@ function app(records={}, nativePlugin=null) {
  const dom=new JSDOM(fs.readFileSync('www/index.html','utf8'),{url:'https://localhost',runScripts:'outside-only'});
  const w=dom.window;
  w.matchMedia=()=>({matches:false,addEventListener(){}});
- w.confirm=()=>true;w.alert=()=>{};
+ w.confirm=()=>true;w.alert=()=>{};w.requestAnimationFrame=fn=>fn();
+ const RealDate=w.Date;w.Date=class extends RealDate{constructor(...args){super(...(args.length?args:[2026,9,10,12]))}static now(){return new RealDate(2026,9,10,12).getTime()}};
  if(nativePlugin)w.Capacitor={isNativePlatform:()=>true,Plugins:{Journal:nativePlugin}};
  w.localStorage.setItem('calendar-notes-v1',JSON.stringify(records));
+ w.eval(fs.readFileSync('www/holidays.js','utf8'));
  w.eval(fs.readFileSync('www/app.js','utf8'));
  return {w,d:w.document,close:()=>w.close()};
 }
@@ -37,7 +39,7 @@ test('food counts, grades, gray zero, pastel saturation at eight and same dark p
 });
 test('week keeps full long note; settings alignment and font persist',()=>{
  const a=app();edit(a);const long=Array.from({length:100},(_,i)=>'음식'+i).join('\n');type(a,long);a.d.querySelector('#close').click();
- a.d.querySelector('[data-tab="week"]').click();assert.equal(a.d.querySelectorAll('.entry').length,7);assert.equal(a.d.querySelector('pre').textContent,long);
+ a.d.querySelector('[data-tab="week"]').click();assert.ok(a.d.querySelectorAll('.entry').length>28);assert.equal(a.d.querySelector('pre').textContent,long);
  a.d.querySelector('[data-tab="settings"]').click();a.d.querySelector('#align').value='left';a.d.querySelector('#align').dispatchEvent(new a.w.Event('change'));
  const slider=a.d.querySelector('input[type="range"]');slider.value='22';slider.dispatchEvent(new a.w.Event('input'));
  assert.equal(JSON.parse(a.w.localStorage.getItem('calendar-settings-v2')).font,22);assert.equal(a.d.documentElement.style.getPropertyValue('--note-align'),'left');a.close();
@@ -52,7 +54,7 @@ test('JSON import restores records and rejects invalid format without data loss'
 test('Android injected bridge starts without registerPlugin and native time + backup work',async()=>{
  let exported;
  const a=app({}, {pickTime:async()=>({time:'19:10'}),exportJson:async data=>{exported=data;return {cancelled:false}}});
- assert.equal(a.d.querySelectorAll('.entry').length,7);
+ assert.ok(a.d.querySelectorAll('.entry').length>28);
  a.d.querySelector('.entry').click();
  assert.equal(a.d.querySelector('#editor').classList.contains('hidden'),false);
  type(a,'11:50\n[코스트코]\n치즈피자 1조각\n밥 150\n참치김치찌개');
@@ -71,4 +73,32 @@ test('empty dates have no hint or grade, month uses year first, shop cursor is i
  assert.match(a.d.querySelector('.month-divider').textContent,/^\d{4}년 \d{1,2}월$/);
  const t=edit(a);a.d.querySelector('#insert-shop').click();assert.equal(t.value,'[]\n');assert.equal(t.selectionStart,1);
  type(a,'   \n');a.d.querySelector('#save').click();assert.equal(a.d.querySelectorAll('.grade').length,0);a.close();
+});
+
+test('continuous dates, year-first month boundaries, red weekends/holidays and today badge',()=>{
+ const a=app(),cards=[...a.d.querySelectorAll('.entry')];
+ assert.equal(cards[0].dataset.date,'2026-09-01');assert.equal(cards.at(-1).dataset.date,'2026-11-30');
+ for(let i=1;i<cards.length;i++)assert.equal(new Date(cards[i].dataset.date)-new Date(cards[i-1].dataset.date),86400000);
+ assert.equal(a.d.querySelector('#prev').hidden,true);assert.equal(a.d.querySelector('#next').hidden,true);
+ for(const k of ['2026-10-03','2026-10-04','2026-10-05','2026-10-09','2026-10-10'])assert.ok(a.d.querySelector(`[data-date="${k}"] .rest-day`));
+ assert.equal(a.d.querySelector('[data-date="2026-10-08"] .rest-day'),null);
+ assert.equal(a.d.querySelectorAll('.today-badge').length,1);assert.equal(a.d.querySelector('.today').dataset.date,'2026-10-10');
+ const november=a.d.querySelector('[data-date="2026-11-01"]');assert.equal(november.previousElementSibling.textContent,'2026년 11월');
+ a.close();
+});
+test('scrolling extends both ends without gaps and prepending preserves position',()=>{
+ const a=app(),c=a.d.querySelector('#content');
+ Object.defineProperty(c,'clientHeight',{value:500});Object.defineProperty(c,'scrollHeight',{get:()=>c.querySelectorAll('.entry').length*50});
+ c.scrollTop=c.scrollHeight-500;c.dispatchEvent(new a.w.Event('scroll'));
+ assert.equal(c.querySelector('.entry:last-child').dataset.date,'2026-12-31');
+ const oldHeight=c.scrollHeight;c.scrollTop=0;c.dispatchEvent(new a.w.Event('scroll'));
+ assert.equal(c.querySelector('.entry').dataset.date,'2026-08-01');assert.equal(c.scrollTop,c.scrollHeight-oldHeight);
+ assert.equal(new Set([...c.querySelectorAll('.entry')].map(e=>e.dataset.date)).size,c.querySelectorAll('.entry').length);
+ a.d.querySelector('#today').click();assert.equal(c.querySelector('.entry').dataset.date,'2026-09-01');a.close();
+});
+test('offline Korean holiday calendar includes lunar, substitute and revised holidays',()=>{
+ const a=app(),h=a.w.KOREAN_HOLIDAYS;
+ for(const k of ['2026-02-16','2026-02-17','2026-02-18','2026-03-02','2026-05-01','2026-05-25','2026-06-03','2026-07-17','2026-08-17','2026-09-24','2026-09-25','2026-09-26','2026-10-05'])assert.ok(h[k],k);
+ for(const k of ['2026-06-08','2026-09-28','2026-10-08'])assert.equal(h[k],undefined,k);
+ assert.equal(h['2025-07-17'],undefined);assert.ok(h['2027-07-19']);a.close();
 });

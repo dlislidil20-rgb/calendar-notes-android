@@ -36,10 +36,10 @@ public class JournalUiTest {
     }
     private void ready(ActivityScenario<MainActivity> scenario) throws Exception {
         for (int i=0;i<60;i++) {
-            if ("7".equals(js(scenario,"document.querySelectorAll('.entry').length"))) return;
+            if ("true".equals(js(scenario,"document.querySelectorAll('.entry').length>28 && !!document.querySelector('.entry.today')"))) {SystemClock.sleep(500);return;}
             SystemClock.sleep(250);
         }
-        fail("App did not render seven days; startup bridge failure");
+        fail("App did not render continuous timeline; startup bridge failure");
     }
     private void tap(ActivityScenario<MainActivity> scenario, String selector) throws Exception {
         String encoded=js(scenario,"JSON.stringify((()=>{const r=document.querySelector("+JSONObject.quote(selector)+").getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,window.innerWidth]})())");
@@ -51,6 +51,17 @@ public class JournalUiTest {
         MotionEvent down=MotionEvent.obtain(t,t,MotionEvent.ACTION_DOWN,xy[0],xy[1],0);
         MotionEvent up=MotionEvent.obtain(t,t+80,MotionEvent.ACTION_UP,xy[0],xy[1],0);
         inst.sendPointerSync(down);inst.sendPointerSync(up);down.recycle();up.recycle();inst.waitForIdleSync();SystemClock.sleep(250);
+    }
+    private void swipeUp(ActivityScenario<MainActivity> scenario) throws Exception {
+        float[] box=new float[4];
+        scenario.onActivity(a->{android.view.View v=a.getBridge().getWebView();int[] xy=new int[2];v.getLocationOnScreen(xy);box[0]=xy[0];box[1]=xy[1];box[2]=v.getWidth();box[3]=v.getHeight();});
+        Instrumentation inst=InstrumentationRegistry.getInstrumentation();long start=SystemClock.uptimeMillis();
+        for(int i=0;i<=12;i++){
+            int action=i==0?MotionEvent.ACTION_DOWN:i==12?MotionEvent.ACTION_UP:MotionEvent.ACTION_MOVE;
+            MotionEvent event=MotionEvent.obtain(start,SystemClock.uptimeMillis(),action,box[0]+box[2]*.5f,box[1]+box[3]*(.85f-.4f*i/12),0);
+            inst.sendPointerSync(event);event.recycle();SystemClock.sleep(35);
+        }
+        inst.waitForIdleSync();SystemClock.sleep(500);
     }
     private void screenshot(String name) throws Exception {
         Instrumentation inst=InstrumentationRegistry.getInstrumentation();
@@ -68,7 +79,7 @@ public class JournalUiTest {
             ready(scenario);
             assertEquals("true",js(scenario,"typeof Capacitor.Plugins.Journal.pickTime==='function'"));
             screenshot("01-week-empty");
-            tap(scenario,".entry");
+            tap(scenario,".entry.today");
             assertEquals("false",js(scenario,"document.querySelector('#editor').classList.contains('hidden')"));
             String note="11:50\n[코스트코]\n치즈피자 1조각\n밥 150\n참치김치찌개\n19:10\n닭가슴살\n사과";
             js(scenario,"document.querySelector('#note').value="+JSONObject.quote(note)+";document.querySelector('#note').dispatchEvent(new Event('input'))");
@@ -96,7 +107,7 @@ public class JournalUiTest {
             assertEquals("\"Hmm...\"",js(scenario,"document.querySelector('.entry .grade').textContent"));
             assertEquals("true",js(scenario,"document.querySelector('.entry pre').textContent.includes('찌개\\n\\n19:10')"));
             screenshot("02-week-saved");
-            tap(scenario,".entry");tap(scenario,"#edit-next");tap(scenario,"#edit-prev");
+            tap(scenario,".entry.today");tap(scenario,"#edit-next");tap(scenario,"#edit-prev");
             assertEquals("true",js(scenario,"document.querySelector('#note').value.includes('닭가슴살')"));
             tap(scenario,"#insert-time");
             onView(isAssignableFrom(TimePicker.class)).check(matches(isDisplayed()));
@@ -106,6 +117,29 @@ public class JournalUiTest {
             assertEquals("\"dark\"",js(scenario,"document.body.dataset.theme"));
             screenshot("04-settings-dark");
             tap(scenario,"[data-tab=week]");screenshot("05-week-dark");
+            // Exercise real vertical touch scrolling, month loading and return-to-today.
+            tap(scenario,"#today");
+            double beforeScroll=Double.parseDouble(js(scenario,"document.querySelector('#content').scrollTop"));
+            swipeUp(scenario);
+            assertTrue("Vertical swipe scrolls dates",Double.parseDouble(js(scenario,"document.querySelector('#content').scrollTop"))>beforeScroll+30);
+            String oldLast=js(scenario,"document.querySelector('#content .entry:last-child').dataset.date");
+            js(scenario,"document.querySelector('#content').scrollTop=document.querySelector('#content').scrollHeight");
+            SystemClock.sleep(500);
+            assertNotEquals("Scrolling down loads next month",oldLast,js(scenario,"document.querySelector('#content .entry:last-child').dataset.date"));
+            String oldFirst=js(scenario,"document.querySelector('.entry').dataset.date");
+            js(scenario,"document.querySelector('#content').scrollTop=0");SystemClock.sleep(500);
+            assertNotEquals("Scrolling up loads previous month",oldFirst,js(scenario,"document.querySelector('.entry').dataset.date"));
+            assertEquals("true",js(scenario,"document.querySelector('#content').scrollTop>0"));
+            // Show an actual month boundary in the screenshot.
+            js(scenario,"(()=>{const c=document.querySelector('#content'),rows=c.querySelectorAll('.month-divider');c.scrollTop+=rows[2].getBoundingClientRect().top-c.getBoundingClientRect().top-120})()");
+            SystemClock.sleep(300);screenshot("07-month-boundary");
+            tap(scenario,"#today");SystemClock.sleep(300);
+            assertEquals("true",js(scenario,"(()=>{const c=document.querySelector('#content'),t=document.querySelector('.today');return Math.abs(t.getBoundingClientRect().top-c.getBoundingClientRect().top-8)<3})()"));
+            assertEquals("true",js(scenario,"document.querySelector('#prev').hidden && document.querySelector('#next').hidden"));
+            screenshot("08-today");
+            js(scenario,"window.testScrollBefore=document.querySelector('#content').scrollTop");
+            tap(scenario,".entry.today");tap(scenario,"#close");
+            assertEquals("true",js(scenario,"Math.abs(document.querySelector('#content').scrollTop-window.testScrollBefore)<3"));
             // Recreate the actual Android Activity, ensuring saved records and theme survive.
             scenario.recreate();ready(scenario);
             assertEquals("\"dark\"",js(scenario,"document.body.dataset.theme"));

@@ -14,3 +14,14 @@ body{font-family:GangwonEducationModuche,sans-serif;font-weight:300}textarea{fon
 @media(max-height:450px){.editor-panel{height:100%;gap:5px;padding:8px 12px}.edit-info{display:none}.actions button{padding:8px 12px}.edit-tools button{padding:5px 8px}}
 /* Navigation symbols are not included in the Korean font's character set. */
 #prev,#next,#edit-prev,#edit-next,#close{font-family:system-ui,sans-serif}
+
+/* The header stays in place while dates form one continuous vertical timeline. */
+html,body{height:100%;overflow:hidden}body{height:100dvh;display:flex;flex-direction:column}
+header{flex-shrink:0}main{width:100%;flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 10px 0;margin:0 auto}
+#toolbar{flex-shrink:0}#content{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overflow-anchor:none;padding:0 2px 40px;overscroll-behavior-y:contain}
+#toolbar button[hidden]{display:none}#toolbar strong{flex:1;text-align:left;padding-left:6px}
+.month-divider{padding:25px 8px 14px}.entry{scroll-margin-top:8px}.entry h3{overflow:visible}
+.date-label{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.date-label.rest-day,.holiday-name{color:#b53643}
+.today-badge{display:inline-block;border-radius:20px;padding:2px 8px;background:#746021;color:white;font-size:12px;font-weight:700}
+.entry.today{box-shadow:inset 0 0 0 2px #aa9145}.holiday-name{font-size:12px;margin:3px 0 5px}
+#edit-date{color:var(--text)}
