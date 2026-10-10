@@ -33,3 +33,5 @@ header{flex-shrink:0}main{width:100%;flex:1;min-height:0;display:flex;flex-direc
 #catalog-form button{white-space:nowrap;border-radius:8px;background:#b99b4c;color:#fff;padding:8px 10px}#catalog-status{font-size:12px;min-height:16px;color:var(--muted)}#catalog-list{flex:1;min-height:0;overflow:auto}
 .catalog-row{display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--border);padding:5px 0}.catalog-choose{flex:1;min-width:0;text-align:left;overflow-wrap:anywhere;padding:13px 6px;font-size:17px}.catalog-edit,.catalog-delete{flex-shrink:0;font-size:12px;background:var(--button);border-radius:6px;padding:9px 7px}.catalog-empty{color:var(--muted);font-size:14px}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 @media(max-height:450px){#catalog-dialog{padding:6px}.catalog-panel{padding:8px;gap:5px}.catalog-help{display:none}}
+
+.entry pre .meal-time{font-weight:700}

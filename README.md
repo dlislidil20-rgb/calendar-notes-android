@@ -1,4 +1,4 @@
-# 달력기록 v4.6 — Android
+# 달력기록 v4.7 — Android
 
 기존 HTML/CSS/JavaScript + Capacitor 7 소스를 유지한 오프라인 기록 앱입니다.
 패키지 ID는 `com.local.weeklyjournal`입니다. Android 6 이상에 설치하며 Android 16 기기에서도 사용할 수 있도록 Android 15 대상 SDK와 화면 여백 처리를 사용합니다.
@@ -15,8 +15,8 @@
 - 광고·로그인·분석 SDK 없음. INTERNET 권한과 Android 자동 클라우드 백업을 사용하지 않음
 
 ## APK 다운로드와 설치
-이 저장소 **Actions → Build Android APK → 성공한 실행 → Artifacts → calendar-notes-v4.6-apk**에서 ZIP을 다운로드합니다.
-압축을 풀어 `calendar-notes-v4.6.apk`를 갤럭시에 옮기고 실행합니다. 파일을 여는 앱에 대해 '이 출처 허용'이 필요할 수 있습니다.
+이 저장소 **Actions → Build Android APK → 성공한 실행 → Artifacts → calendar-notes-v4.7-apk**에서 ZIP을 다운로드합니다.
+압축을 풀어 `calendar-notes-v4.7.apk`를 갤럭시에 옮기고 실행합니다. 파일을 여는 앱에 대해 '이 출처 허용'이 필요할 수 있습니다.
 이 빌드는 개인 설치용 debug 서명 APK입니다. Play 스토어 배포용 release 서명은 아닙니다.
 자동 빌드 간 서명키가 달라질 수 있으므로 다른 빌드로 교체 전 JSON을 백업하세요. 서명이 다르면 기존 앱을 제거해야 할 수 있습니다.
 
@@ -70,3 +70,7 @@ cd android
 - 가게명·메뉴명을 선택하면 최근 선택 순서가 저장됩니다. 목록을 다시 열면 최근 항목부터 표시합니다.
 - 메뉴를 연속으로 고를 때는 목록이 움직이지 않습니다. 다시 열 때만 바뀐 순서를 표시합니다.
 - 목록 순서는 앱 재시작과 JSON 백업·복원에서도 유지됩니다.
+
+## v4.7 시간 강조
+- 주간·일간 기록 표시에서 시간만 있는 줄을 굵게 표시합니다. 직접 입력한 시간에도 동일하게 적용합니다.
+- 편집 입력칸과 JSON은 기존 일반 텍스트 형식을 유지합니다. 줄바꿈·음식 개수·배경색은 변경하지 않습니다.

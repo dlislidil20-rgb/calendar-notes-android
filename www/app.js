@@ -22,7 +22,14 @@ function entry(d){
  if(today)label.append(node('span','today-badge','오늘'));
  heading.append(label);if(note.trim())heading.append(node('span','grade',grade(count)));el.append(heading);
  if(holiday)el.append(node('div','holiday-name',holiday));
- if(note.trim())el.append(node('pre','',note));
+ if(note.trim()){
+  const text=node('pre');
+  note.split('\n').forEach((line,i)=>{
+   if(i)text.append(document.createTextNode('\n'));
+   text.append(/^([01]?\d|2[0-3]):[0-5]\d$/.test(line.trim())?node('strong','meal-time',line):document.createTextNode(line));
+  });
+  el.append(text);
+ }
  el.addEventListener('click',()=>openEdit(k));
  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openEdit(k)}});
  return el;
